@@ -10,9 +10,26 @@ type Lexer struct {
 	ch           byte // 当前正在查看的字符
 }
 
+
+func (l *Lexer) readChar() {
+	if l.readPosition >= len(l.input) {
+		l.ch = 0
+	} else {
+		l.ch = l.input[l.readPosition]
+	}
+	l.position = l.readPosition
+	l.readPosition += 1
+}
+// lexer/lexer.go
+
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
+	l.readChar()
 	return l
 }
+// lexer/lexer.go
+
+
+
 
 
