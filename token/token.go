@@ -2,48 +2,69 @@ package token
 
 type TokenType string
 
+const (
+	ILLEGAL = "ILLEGAL"
+	EOF     = "EOF"
+
+	// Identifiers + literals
+	IDENT  = "IDENT"  // add, foobar, x, y, ...
+	INT    = "INT"    // 1343456
+	STRING = "STRING" // "foobar"
+
+	// Operators
+	ASSIGN   = "="
+	PLUS     = "+"
+	MINUS    = "-"
+	BANG     = "!"
+	ASTERISK = "*"
+	SLASH    = "/"
+
+	LT = "<"
+	GT = ">"
+
+	EQ     = "=="
+	NOT_EQ = "!="
+
+	// Delimiters
+	COMMA     = ","
+	SEMICOLON = ";"
+	COLON     = ":"
+
+	LPAREN   = "("
+	RPAREN   = ")"
+	LBRACE   = "{"
+	RBRACE   = "}"
+	LBRACKET = "["
+	RBRACKET = "]"
+
+	// Keywords
+	FUNCTION = "FUNCTION"
+	LET      = "LET"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
+)
+
 type Token struct {
 	Type    TokenType
 	Literal string
 }
 
-const (
-	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
+var keywords = map[string]TokenType{
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
+}
 
-	IDENT = "IDENT"
-	INT   = "INT"
-
-	ASSIGN   = "="
-	PLUS     = "+"
-	MINUS    = "-"
-	ASTERISK = "*"
-	SLASH    = "/"
-	BANG     = "!"
-
-	LT     = "<"
-	GT     = ">"
-	EQ     = "=="
-	NOT_EQ = "!="
-	LT_EQ  = "<="
-	GT_EQ  = ">="
-
-	COMMA     = ","
-	SEMICOLON = ";"
-
-	LPAREN = "("
-	RPAREN = ")"
-	LBRACE = "{"
-	RBRACE = "}"
-	LBRACK = "["
-	RBRACK = "]"
-
-	FUNCTION = "fun"
-	LET      = "let"
-	IF       = "if"
-	ELSE     = "else"
-	ELSE_IF  = "elif"
-	TRUE     = "true"
-	FALSE    = "false"
-	RETURN   = "return"
-)
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}
