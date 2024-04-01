@@ -34,3 +34,15 @@ const (
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 )
+
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
+
+func LoopupIdent(s string) TokenType {
+	if tok, ok := keywords[s]; ok {
+		return tok
+	}
+	return IDENT
+}
