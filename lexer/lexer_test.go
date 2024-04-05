@@ -7,7 +7,7 @@ import (
 )
 
 func Test_Simple_Lexer(t *testing.T) {
-	input := "=+(){},;"
+	input := "=+(){},;-/*<>!"
 
 	tests := []struct {
 		expectType    token.TokenType
@@ -21,6 +21,12 @@ func Test_Simple_Lexer(t *testing.T) {
 		{expectType: token.RBRACE, expectLiteral: "}"},
 		{expectType: token.COMMA, expectLiteral: ","},
 		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.MINUS, expectLiteral: "-"},
+		{expectType: token.SLASH, expectLiteral: "/"},
+		{expectType: token.ASTERISK, expectLiteral: "*"},
+		{expectType: token.LT, expectLiteral: "<"},
+		{expectType: token.GT, expectLiteral: ">"},
+		{expectType: token.BANG, expectLiteral: "!"},
 	}
 
 	l := lexer.New(input)
@@ -43,6 +49,14 @@ func Test_Complex_Lexer(t *testing.T) {
 	x+y;
 };
 let result = add(five,ten);
+5 < 10 >5;
+if(5<10){
+	return true;
+}else{
+return false;
+}
+10 == 10;
+10 != 9;
 `
 	tests := []struct {
 		expectType    token.TokenType
@@ -83,6 +97,37 @@ let result = add(five,ten);
 		{expectType: token.COMMA, expectLiteral: ","},
 		{expectType: token.IDENT, expectLiteral: "ten"},
 		{expectType: token.RPAREN, expectLiteral: ")"},
+		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.INT, expectLiteral: "5"},
+		{expectType: token.LT, expectLiteral: "<"},
+		{expectType: token.INT, expectLiteral: "10"},
+		{expectType: token.GT, expectLiteral: ">"},
+		{expectType: token.INT, expectLiteral: "5"},
+		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.IF, expectLiteral: "if"},
+		{expectType: token.LPAREN, expectLiteral: "("},
+		{expectType: token.INT, expectLiteral: "5"},
+		{expectType: token.LT, expectLiteral: "<"},
+		{expectType: token.INT, expectLiteral: "10"},
+		{expectType: token.RPAREN, expectLiteral: ")"},
+		{expectType: token.LBRACE, expectLiteral: "{"},
+		{expectType: token.RETURN, expectLiteral: "return"},
+		{expectType: token.TRUE, expectLiteral: "true"},
+		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.RBRACE, expectLiteral: "}"},
+		{expectType: token.ELSE, expectLiteral: "else"},
+		{expectType: token.LBRACE, expectLiteral: "{"},
+		{expectType: token.RETURN, expectLiteral: "return"},
+		{expectType: token.FALSE, expectLiteral: "false"},
+		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.RBRACE, expectLiteral: "}"},
+		{expectType: token.INT, expectLiteral: "10"},
+		{expectType: token.EQ, expectLiteral: "=="},
+		{expectType: token.INT, expectLiteral: "10"},
+		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.INT, expectLiteral: "10"},
+		{expectType: token.NOT_EQ, expectLiteral: "!="},
+		{expectType: token.INT, expectLiteral: "9"},
 		{expectType: token.SEMICOLON, expectLiteral: ";"},
 	}
 

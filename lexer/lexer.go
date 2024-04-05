@@ -32,7 +32,12 @@ func (l *lexer) NextToken() token.Token {
 	l.skipWhitespace()
 	switch l.ch {
 	case '=':
-		tok = token.Token{Type: token.ASSIGN, Literal: string(l.ch)}
+		if l.peakChar() == '=' {
+			l.readChar()
+			tok = token.Token{Type: token.EQ, Literal: "=="}
+		} else {
+			tok = token.Token{Type: token.ASSIGN, Literal: string(l.ch)}
+		}
 	case '+':
 		tok = token.Token{Type: token.PLUS, Literal: string(l.ch)}
 	case '(':
@@ -47,13 +52,44 @@ func (l *lexer) NextToken() token.Token {
 		tok = token.Token{Type: token.COMMA, Literal: string(l.ch)}
 	case ';':
 		tok = token.Token{Type: token.SEMICOLON, Literal: string(l.ch)}
+	case '-':
+		tok = token.Token{Type: token.MINUS, Literal: string(l.ch)}
+	case '/':
+		tok = token.Token{Type: token.SLASH, Literal: string(l.ch)}
+	case '*':
+		tok = token.Token{Type: token.ASTERISK, Literal: string(l.ch)}
+	case '<':
+		tok = token.Token{Type: token.LT, Literal: string(l.ch)}
+	case '>':
+		tok = token.Token{Type: token.GT, Literal: string(l.ch)}
+	case '!':
+		if l.peakChar() == '=' {
+			l.readChar()
+			tok = token.Token{Type: token.NOT_EQ, Literal: "!="}
+		} else {
+			tok = token.Token{Type: token.BANG, Literal: string(l.ch)}
+		}
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
-			tok.Type = token.LoopupIdent(tok.Literal)
+			literal := tok.Literal
+			switch literal {
+			case "if":
+				tok.Type = token.IF
+			case "else":
+				tok.Type = token.ELSE
+			case "return":
+				tok.Type = token.RETURN
+			case "true":
+				tok.Type = token.TRUE
+			case "false":
+				tok.Type = token.FALSE
+			default:
+				tok.Type = token.LoopupIdent(tok.Literal)
+			}
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Type = token.INT
@@ -101,4 +137,12 @@ func (l *lexer) readNumber() string {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *lexer) peakChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
 }
