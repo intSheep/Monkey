@@ -4,16 +4,18 @@ import (
 	"Monkey/ast"
 	"Monkey/lexer"
 	"Monkey/token"
+	"fmt"
 )
 
 type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{l: l, errors: []string{}}
 
 	//读取两个词法单元以设置curToken和peekToken
 	p.nextToken()
@@ -82,6 +84,16 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	} else {
+		p.peekError(t)
 		return false
 	}
+}
+
+func (p *Parser) peekError(t token.TokenType) {
+	msg := fmt.Sprintf("peekToken want to be [%v], but got [%v] ", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) PeakErrors(t token.TokenType) {
+
 }
