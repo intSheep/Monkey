@@ -47,3 +47,56 @@ func TestIntegerLiteral(t *testing.T, right ast.Expression, want int64) bool {
 	}
 	return true
 }
+
+func TestIdentifier(t *testing.T, exp ast.Expression, value string) bool {
+	ident, ok := exp.(*ast.Identifier)
+	if !ok {
+		t.Errorf("exp not *ast.Identifier.got %v", exp)
+		return false
+	}
+
+	if ident.Value != value {
+		t.Errorf("ident value not %v.got %v", value, ident.Value)
+		return false
+	}
+
+	if ident.TokenLiteral() != value {
+		t.Errorf("ident TokenLiteral not %v.got %v.", value, ident.TokenLiteral())
+		return false
+	}
+	return true
+}
+
+func TestLiteralExpression(t *testing.T, exp ast.Expression, expected any) bool {
+	switch v := expected.(type) {
+	case int:
+		return TestIntegerLiteral(t, exp, int64(v))
+	case int64:
+		return TestIntegerLiteral(t, exp, v)
+	case string:
+		return TestIdentifier(t, exp, v)
+	}
+	t.Errorf("type of exp not handled.got [%v]", exp)
+	return false
+}
+
+func TestInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
+	opExp, ok := exp.(*ast.InfixExpression)
+	if !ok {
+		t.Errorf("exp is not ast.InfixExpression.got [%v]", exp)
+	}
+
+	if !TestLiteralExpression(t, opExp.Left, left) {
+		return false
+	}
+
+	if !TestLiteralExpression(t, opExp.Right, left) {
+		return false
+	}
+
+	if opExp.Operator != operator {
+		t.Errorf("exp.Operator is not %v.but got %v", operator, opExp.Operator)
+		return false
+	}
+	return true
+}
