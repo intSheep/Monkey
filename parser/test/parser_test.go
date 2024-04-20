@@ -224,3 +224,40 @@ func TestParsingInfixExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestBooleanExpression(t *testing.T) {
+	tests := []struct {
+		input  string
+		target bool
+	}{
+		{"true;", true},
+		{"false;", false},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+		program := p.ParseProgram()
+		fmt.Println(program.String())
+		parser.CheckErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program statement num want [1] , but got [%v]", len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Errorf("stmt not *ast.ExpressionStatement. got [%v]", program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.Boolean)
+		if !ok {
+			t.Errorf("exp want *ast.Boolean,but got [%v]", stmt.Expression)
+		}
+
+		if exp.Value != tt.target {
+			t.Errorf("stmt.Value want [%v] but got [%v] ", tt.target, exp.Value)
+		}
+
+	}
+}
