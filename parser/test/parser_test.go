@@ -184,13 +184,13 @@ func TestParsingInfixExpressions(t *testing.T) {
 		operator   string
 		rightValue int64
 	}{
-		{"5+5", 5, "+", 5},
-		{"5-5", 5, "-", 5},
-		{"5*5", 5, "*", 5},
-		{"5/5", 5, "/", 5},
-		{"5>5", 5, ">", 5},
-		{"5==5", 5, "==", 5},
-		{"5!=5", 5, "!=", 5},
+		{"5+5;", 5, "+", 5},
+		{"5-5;", 5, "-", 5},
+		{"5*5;", 5, "*", 5},
+		{"5/5;", 5, "/", 5},
+		{"5>5;", 5, ">", 5},
+		{"5==5;", 5, "==", 5},
+		{"5!=5;", 5, "!=", 5},
 	}
 
 	for _, tt := range infixTests {
@@ -198,7 +198,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		p := parser.New(l)
 		program := p.ParseProgram()
 		parser.CheckErrors(t, p)
-
+		fmt.Println(program.String())
 		if len(program.Statements) != 1 {
 			t.Fatalf("program statement num want [1] , but got [%v]", len(program.Statements))
 		}
