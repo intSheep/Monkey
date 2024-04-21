@@ -67,6 +67,27 @@ func TestIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	return true
 }
 
+func TestBoolean(t *testing.T, exp ast.Expression, value bool) bool {
+	b, ok := exp.(*ast.Boolean)
+	if !ok {
+		t.Errorf("exp not *ast.Boolean.got [%v]", b)
+		return false
+	}
+
+	if b.Value != value {
+		t.Errorf("exp value expect [%v],but got [%v].", value, b.Value)
+		return false
+	}
+
+	if b.TokenLiteral() != fmt.Sprintf("%v", value) {
+		t.Errorf("exp tokenLiteral want [%v],but got [%v]", value, b.TokenLiteral())
+		return false
+	}
+
+	return true
+
+}
+
 func TestLiteralExpression(t *testing.T, exp ast.Expression, expected any) bool {
 	switch v := expected.(type) {
 	case int:
@@ -75,6 +96,8 @@ func TestLiteralExpression(t *testing.T, exp ast.Expression, expected any) bool 
 		return TestIntegerLiteral(t, exp, v)
 	case string:
 		return TestIdentifier(t, exp, v)
+	case bool:
+		return TestBoolean(t, exp, v)
 	}
 	t.Errorf("type of exp not handled.got [%v]", exp)
 	return false
@@ -90,7 +113,7 @@ func TestInfixExpression(t *testing.T, exp ast.Expression, left any, operator st
 		return false
 	}
 
-	if !TestLiteralExpression(t, opExp.Right, left) {
+	if !TestLiteralExpression(t, opExp.Right, right) {
 		return false
 	}
 
