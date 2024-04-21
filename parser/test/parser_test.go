@@ -365,3 +365,24 @@ func TestIfExpression(t *testing.T) {
 		fmt.Println(program.String())
 	}
 }
+
+func TestFunctionLiteralParsing(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{`fn(x,y){x+y;}`, `fn(x,y){ (x + y) }`},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+		program := p.ParseProgram()
+		parser.CheckErrors(t, p)
+
+		fmt.Println(program.String())
+		if program.String() != tt.expect {
+			t.Fatalf("want [%v],but got  [%v]", tt.expect, program.String())
+		}
+	}
+}

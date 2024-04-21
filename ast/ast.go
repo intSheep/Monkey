@@ -4,6 +4,7 @@ import (
 	"Monkey/token"
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Node interface {
@@ -255,5 +256,35 @@ func (bs *BlockStatement) String() string {
 	for _, stmt := range bs.Statements {
 		out.WriteString(stmt.String())
 	}
+	return out.String()
+}
+
+type FunctionLiteral struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fl *FunctionLiteral) ExpressionNode() {
+
+}
+
+func (fl *FunctionLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+
+func (fl *FunctionLiteral) String() string {
+	var out bytes.Buffer
+	var params []string
+	out.WriteString("fn")
+	out.WriteString("(")
+	for _, param := range fl.Parameters {
+		params = append(params, param.TokenLiteral())
+	}
+	out.WriteString(strings.Join(params, ","))
+	out.WriteString(")")
+	out.WriteString("{ ")
+	out.WriteString(fl.Body.String())
+	out.WriteString(" }")
 	return out.String()
 }

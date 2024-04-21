@@ -55,6 +55,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.ASTERISK, p.parsePrefixExpression)
 	p.registerPrefix(token.SLASH, p.parsePrefixExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 	//注册中缀函数
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
@@ -314,4 +315,38 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.nextToken()
 	}
 	return block
+}
+
+func (p *Parser) parseFunctionExpression() ast.Expression {
+	fn := &ast.FunctionLiteral{Token: p.curToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	fn.Parameters = p.parseFunctionParameters()
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	fn.Body = p.parseBlockStatement()
+	return fn
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	var idents []*ast.Identifier
+	if p.peekTokenIs(token.RPAREN) {
+		return idents
+	}
+	p.nextToken()
+	for !p.curTokenIs(token.RPAREN) && !p.curTokenIs(token.EOF) {
+		if p.curTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		idents = append(idents, ident)
+		p.nextToken()
+	}
+
+	return idents
 }
