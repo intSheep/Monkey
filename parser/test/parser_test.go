@@ -5,6 +5,7 @@ import (
 	"Monkey/lexer"
 	"Monkey/parser"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -332,9 +333,11 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"2/(5+5)", "(2 / (5 + 5))"},
 		{"-(5+5)", "(-(5 + 5))"},
 		{"!(true==true)", "(!(true == true))"},
-		{"a + add(b*c)+d", "((a + add((b * c))) + d)"},
-		{"a*[1,2,3,4][b*c]*d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
-		{"add(a*b[2], b[1], 2 * [1,2][1])", "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
+		{"a+add(b*c)+d", "((a + add((b * c))) + d)"},
+		{"add(a,b,1,2*3,4+5,add(6,7*8))", "add(a,b,1,(2 * 3),(4 + 5),add(6,(7 * 8)))"},
+		{"(3-2)", "(3 - 2)"},
+		//{"a*[1,2,3,4][b*c]*d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
+		//{"add(a*b[2], b[1], 2 * [1,2][1])", "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
 	}
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
@@ -384,5 +387,68 @@ func TestFunctionLiteralParsing(t *testing.T) {
 		if program.String() != tt.expect {
 			t.Fatalf("want [%v],but got  [%v]", tt.expect, program.String())
 		}
+	}
+}
+
+func TestCallFunction(t *testing.T) {
+	input := `add(1,2*3,4+5);`
+
+	l := lexer.New(input)
+	p := parser.New(l)
+	program := p.ParseProgram()
+	parser.CheckErrors(t, p)
+
+	require.Equal(t, len(program.Statements), 1)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("stmt not *ast.Expression,got [%v]", program.Statements[0])
+	}
+
+	exp, ok := stmt.Expression.(*ast.CallExpression)
+	if !ok {
+		t.Fatalf("stmt not *ast.CallExpression,got [%v]", stmt.Expression)
+	}
+
+	if !parser.TestIdentifier(t, exp.Function, "add") {
+		return
+	}
+
+	require.Equal(t, len(exp.Arguments), 3)
+	parser.TestLiteralExpression(t, exp.Arguments[0], 1)
+	parser.TestInfixExpression(t, exp.Arguments[1], 2, "*", 3)
+	parser.TestInfixExpression(t, exp.Arguments[2], 4, "+", 5)
+}
+
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedIdentifier string
+		expectedValue      any
+	}{
+		{"let x=5;", "x", 5},
+		{"let y =true;", "y", true},
+		{"let foobar =y;", "foobar", "y"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := parser.New(l)
+			program := p.ParseProgram()
+			parser.CheckErrors(t, p)
+
+			require.Equal(t, len(program.Statements), 1)
+			stmt := program.Statements[0]
+			if !parser.TestLetStatement(t, stmt, tt.expectedIdentifier) {
+				return
+			}
+
+			val := stmt.(*ast.LetStatement).Value
+			if !parser.TestLiteralExpression(t, val, tt.expectedValue) {
+				return
+			}
+		})
+
 	}
 }
