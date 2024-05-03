@@ -1,6 +1,7 @@
 package repl
 
 import (
+	"Monkey/evaluator"
 	"Monkey/lexer"
 	"Monkey/parser"
 	"Monkey/token"
@@ -45,8 +46,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
 			fmt.Fprintf(out, "%+v\n", tok)
 		}
