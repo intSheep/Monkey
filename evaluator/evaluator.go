@@ -56,6 +56,20 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		env.Set(node.Name.Value, val)
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
+	case *ast.FunctionLiteral:
+		params := node.Parameters
+		body := node.Body
+		return &object.Function{Parameters: params, Body: body, Env: env}
+	case *ast.CallExpression:
+		function := Eval(node.Function, env)
+		if isError(function) {
+			return function
+		}
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+		return applyFunction(function, args)
 	}
 	return nil
 }
@@ -87,7 +101,7 @@ func evalBlockStatement(blockStmt *ast.BlockStatement, env *object.Environment) 
 	var result object.Object
 
 	for _, stmt := range blockStmt.Statements {
-		result := Eval(stmt, env)
+		result = Eval(stmt, env)
 		switch result := result.(type) {
 		case *object.ReturnValue:
 			return result.Value
@@ -217,6 +231,19 @@ func isTruthy(obj object.Object) bool {
 	}
 }
 
+func evalExpressions(args []ast.Expression, env *object.Environment) []object.Object {
+	var results []object.Object
+
+	for _, arg := range args {
+		result := Eval(arg, env)
+		if isError(result) {
+			return []object.Object{result}
+		}
+		results = append(results, result)
+	}
+	return results
+}
+
 func newError(format string, a ...any) *object.Error {
 	return &object.Error{fmt.Sprintf(format, a...)}
 }
@@ -226,4 +253,30 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR_OBJ
 	}
 	return false
+}
+
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	function, ok := fn.(*object.Function)
+	if !ok {
+		return newError("not a function: %s", fn.Type())
+	}
+	extendEnv := extendFunctionEnv(function, args)
+	evaluated := Eval(function.Body, extendEnv)
+	return unwrapReturnValue(evaluated)
+}
+
+func extendFunctionEnv(function *object.Function, args []object.Object) *object.Environment {
+	env := object.NewEnclosedEnvironment(function.Env)
+
+	for paramIdx, param := range function.Parameters {
+		env.Set(param.Value, args[paramIdx])
+	}
+	return env
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if returnValue, ok := obj.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+	return obj
 }
