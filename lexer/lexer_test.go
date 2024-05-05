@@ -57,6 +57,8 @@ return false;
 }
 10 == 10;
 10 != 9;
+"foobar"
+"foo bar"
 `
 	tests := []struct {
 		expectType    token.TokenType
@@ -129,6 +131,9 @@ return false;
 		{expectType: token.NOT_EQ, expectLiteral: "!="},
 		{expectType: token.INT, expectLiteral: "9"},
 		{expectType: token.SEMICOLON, expectLiteral: ";"},
+		{expectType: token.STRING, expectLiteral: "foobar"},
+		{expectType: token.STRING, expectLiteral: "foo bar"},
+		{expectType: token.EOF, expectLiteral: ""},
 	}
 
 	l := lexer.New(input)
