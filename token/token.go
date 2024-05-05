@@ -46,6 +46,9 @@ const (
 	TRUE     = "TRUE"
 	FALSE    = "FALSE"
 	STRING   = "STRING"
+	//array
+	LBARACKET = "["
+	RBARACKET = "]"
 )
 
 var keywords = map[string]TokenType{

@@ -59,6 +59,7 @@ return false;
 10 != 9;
 "foobar"
 "foo bar"
+[1,2]
 `
 	tests := []struct {
 		expectType    token.TokenType
@@ -133,6 +134,11 @@ return false;
 		{expectType: token.SEMICOLON, expectLiteral: ";"},
 		{expectType: token.STRING, expectLiteral: "foobar"},
 		{expectType: token.STRING, expectLiteral: "foo bar"},
+		{expectType: token.LBARACKET, expectLiteral: "["},
+		{expectType: token.INT, expectLiteral: "1"},
+		{expectType: token.COMMA, expectLiteral: ","},
+		{expectType: token.INT, expectLiteral: "2"},
+		{expectType: token.RBARACKET, expectLiteral: "]"},
 		{expectType: token.EOF, expectLiteral: ""},
 	}
 
