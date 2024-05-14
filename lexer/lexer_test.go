@@ -60,6 +60,7 @@ return false;
 "foobar"
 "foo bar"
 [1,2]
+{"foo":"bar"}
 `
 	tests := []struct {
 		expectType    token.TokenType
@@ -139,6 +140,11 @@ return false;
 		{expectType: token.COMMA, expectLiteral: ","},
 		{expectType: token.INT, expectLiteral: "2"},
 		{expectType: token.RBARACKET, expectLiteral: "]"},
+		{expectType: token.LBRACE, expectLiteral: "{"},
+		{expectType: token.STRING, expectLiteral: "foo"},
+		{expectType: token.COLON, expectLiteral: ":"},
+		{expectType: token.STRING, expectLiteral: "bar"},
+		{expectType: token.RBRACE, expectLiteral: "}"},
 		{expectType: token.EOF, expectLiteral: ""},
 	}
 
