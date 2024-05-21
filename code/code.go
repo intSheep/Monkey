@@ -46,10 +46,15 @@ func Make(op Opcode, operand ...int) []byte {
 		return []byte{}
 	}
 
-	instructionLen := def.OperandWidths[0] + 1
-	instruction := make([]byte, instructionLen)
-	instruction[0] = byte(op)
-
+	var instruction []byte
+	if len(def.OperandWidths) == 0 {
+		instruction = make([]byte, 1)
+		instruction[0] = byte(op)
+	} else {
+		instructionLen := def.OperandWidths[0] + 1
+		instruction = make([]byte, instructionLen)
+		instruction[0] = byte(op)
+	}
 	offset := 1
 	for i, o := range operand {
 		with := def.OperandWidths[i]
@@ -110,6 +115,8 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 	}
 
 	switch operandsCount {
+	case 0:
+		return def.name
 	case 1:
 		return fmt.Sprintf("%s %d", def.name, operands[0])
 	}

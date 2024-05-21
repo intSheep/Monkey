@@ -4,27 +4,32 @@ import "testing"
 
 func TestMake(t *testing.T) {
 	tests := []struct {
+		name     string
 		op       Opcode
 		operands []int
 		expected []byte
 	}{
-		{OpConstant, []int{65534}, []byte{byte(OpConstant), 255, 254}},
+		{"OpConstant", OpConstant, []int{65534}, []byte{byte(OpConstant), 255, 254}},
+		{"OpAdd", OpAdd, []int{}, []byte{byte(OpAdd)}},
 	}
 
 	for _, tt := range tests {
-		instruction := Make(tt.op, tt.operands...)
+		t.Run(tt.name, func(t *testing.T) {
+			instruction := Make(tt.op, tt.operands...)
 
-		if len(instruction) != len(tt.expected) {
-			t.Errorf("instruction has wrong length. want=%d, got=%d",
-				len(tt.expected), len(instruction))
-		}
-
-		for i, b := range tt.expected {
-			if instruction[i] != tt.expected[i] {
-				t.Errorf("wrong byte at pos %d. want=%d, got=%d",
-					i, b, instruction[i])
+			if len(instruction) != len(tt.expected) {
+				t.Errorf("instruction has wrong length. want=%d, got=%d",
+					len(tt.expected), len(instruction))
 			}
-		}
+
+			for i, b := range tt.expected {
+				if instruction[i] != tt.expected[i] {
+					t.Errorf("wrong byte at pos %d. want=%d, got=%d",
+						i, b, instruction[i])
+				}
+			}
+
+		})
 	}
 }
 
@@ -62,10 +67,12 @@ func TestInstructionsString(t *testing.T) {
 		Make(OpConstant, 1),
 		Make(OpConstant, 2),
 		Make(OpConstant, 65535),
+		Make(OpAdd),
 	}
 	expected := `0000 OpConstant 1
 0003 OpConstant 2
 0006 OpConstant 65535
+0009 OpAdd
 `
 	concatted := Instructions{}
 	for _, ins := range instructions {
