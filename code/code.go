@@ -1,6 +1,7 @@
 package code
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 )
@@ -11,6 +12,7 @@ type Opcode byte
 
 const (
 	OpConstant Opcode = iota
+	OpAdd
 )
 
 type Definition struct {
@@ -20,6 +22,7 @@ type Definition struct {
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
 }
 
 // Lookup 传入opcode的byte
@@ -82,6 +85,34 @@ func ReadUnit16(ins []byte) uint16 {
 	return binary.BigEndian.Uint16(ins)
 }
 
-func (i Instructions) String() string {
-	return ""
+func (ins Instructions) String() string {
+	var out bytes.Buffer
+	i := 0
+	for i < len(ins) {
+		def, err := Lookup(ins[i])
+		if err != nil {
+			fmt.Fprintf(&out, "Error:%s\n", err)
+			continue
+		}
+
+		operands, read := ReadOperands(def, ins[i+1:])
+		fmt.Fprintf(&out, "%04d %s\n", i, ins.fmtInstruction(def, operands))
+		i += 1 + read
+	}
+	return out.String()
+}
+
+// fmtInstruction 辅助函数，用于将指令instructions格式化输出
+func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
+	operandsCount := len(def.OperandWidths)
+	if len(operands) != operandsCount {
+		return fmt.Sprintf("ERROR:operands len %d does not match defined %d\n", len(operands), operandsCount)
+	}
+
+	switch operandsCount {
+	case 1:
+		return fmt.Sprintf("%s %d", def.name, operands[0])
+	}
+
+	return fmt.Sprintf("ERROR:unhandled operandCount for %s\n", def.name)
 }
