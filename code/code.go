@@ -22,6 +22,8 @@ var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
 }
 
+// Lookup 传入opcode的byte
+// 得到opcode的定义
 func Lookup(op byte) (*Definition, error) {
 	res, ok := definitions[Opcode(op)]
 	if !ok {
@@ -55,4 +57,31 @@ func Make(op Opcode, operand ...int) []byte {
 		offset += with
 	}
 	return instruction
+}
+
+// ReadOperands : Make 的逆过程
+// 传入opcode的定义、字节码指令
+// 返回字节码的操作数operands和指令长度
+func ReadOperands(def *Definition, ins Instructions) ([]int, int) {
+	operands := make([]int, len(def.OperandWidths))
+	offset := 0
+
+	for i, width := range def.OperandWidths {
+		switch width {
+		case 2:
+			operands[i] = int(ReadUnit16(ins[offset:]))
+		}
+		offset += width
+	}
+	return operands, offset
+}
+
+// ReadUnit16 辅助函数
+// 将[]byte转化为uint16
+func ReadUnit16(ins []byte) uint16 {
+	return binary.BigEndian.Uint16(ins)
+}
+
+func (i Instructions) String() string {
+	return ""
 }
