@@ -41,7 +41,7 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv, code.OpNotEqual, code.OpEqual, code.OpGreaterThan:
 			err := vm.executeBinaryOperation(op)
 			if err != nil {
 				return err
@@ -96,11 +96,14 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 
 	leftType := left.Type()
 	rightType := right.Type()
-
-	if leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ {
+	switch {
+	case leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ:
 		return vm.executeBinaryIntegerOperation(op, left, right)
+	case leftType == object.BOOLEAN_OBJ && rightType == object.BOOLEAN_OBJ:
+		return vm.executeBinaryBooleanOperation(op, left, right)
+	default:
+		return fmt.Errorf("unsupport types for binary operation: %s %s", leftType, rightType)
 	}
-	return fmt.Errorf("unsupport types for binary operation: %s %s", leftType, rightType)
 }
 
 func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left object.Object, right object.Object) error {
@@ -118,8 +121,47 @@ func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left object.Object, 
 		result = leftValue / rightValue
 	case code.OpMul:
 		result = leftValue * rightValue
+	case code.OpEqual:
+		if leftValue == rightValue {
+			return vm.push(True)
+		} else {
+			return vm.push(False)
+		}
+	case code.OpNotEqual:
+		if leftValue != rightValue {
+			return vm.push(True)
+		} else {
+			return vm.push(False)
+		}
+	case code.OpGreaterThan:
+		if leftValue > rightValue {
+			return vm.push(True)
+		} else {
+			return vm.push(False)
+		}
 	default:
 		return fmt.Errorf("unkonwn integer operator:%d", op)
 	}
 	return vm.push(&object.Integer{result})
+}
+
+func (vm *VM) executeBinaryBooleanOperation(op code.Opcode, left object.Object, right object.Object) error {
+	leftValue := left.(*object.Boolean).Value
+	rightValue := right.(*object.Boolean).Value
+
+	var result bool
+
+	switch op {
+	case code.OpEqual:
+		result = leftValue == rightValue
+	case code.OpNotEqual:
+		result = leftValue != rightValue
+	default:
+		return fmt.Errorf("unkonwn integer operator:%d", op)
+	}
+	if result {
+		return vm.push(True)
+	} else {
+		return vm.push(False)
+	}
 }

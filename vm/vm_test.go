@@ -113,6 +113,12 @@ func TestBooleanExpressions(t *testing.T) {
 	tests := []vmTestCase{
 		{"true", true},
 		{"false", false},
+		{"true == true", true},
+		{"true == false", false},
+		{"true != true", false},
+		{"true != false", true},
+		{"2>1", true},
+		{"2<1", false},
 	}
 
 	for _, tt := range tests {
