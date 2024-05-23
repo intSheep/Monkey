@@ -17,6 +17,9 @@ type VM struct {
 	sp    int // 指向栈顶下一个位置的指针
 }
 
+var True = &object.Boolean{Value: true}
+var False = &object.Boolean{Value: false}
+
 func New(bytecode *compiler.Bytecode) *VM {
 	return &VM{
 		instructions: bytecode.Instructions,
@@ -43,8 +46,19 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpTrue:
+			err := vm.push(True)
+			if err != nil {
+				return err
+			}
+		case code.OpFalse:
+			err := vm.push(False)
+			if err != nil {
+				return nil
+			}
 		case code.OpPop:
 			vm.pop()
+
 		}
 	}
 	return nil
