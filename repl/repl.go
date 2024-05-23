@@ -1,11 +1,10 @@
 package repl
 
 import (
-	"Monkey/evaluator"
+	"Monkey/compiler"
 	"Monkey/lexer"
-	"Monkey/object"
 	"Monkey/parser"
-	"Monkey/token"
+	"Monkey/vm"
 	"bufio"
 	"fmt"
 	"io"
@@ -31,7 +30,7 @@ const MONKEY_FACE = `            __,__
 func Start(in io.Reader, out io.Writer) {
 	io.WriteString(out, MONKEY_FACE)
 	scanner := bufio.NewScanner(in)
-	env := object.NewEnvironment()
+	//env := object.NewEnvironment()
 	for {
 		fmt.Fprintf(out, PROMPT)
 		scanned := scanner.Scan()
@@ -48,14 +47,30 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program, env)
-		if evaluated != nil {
-			io.WriteString(out, evaluated.Inspect())
-			io.WriteString(out, "\n")
+		comp := compiler.New()
+		err := comp.Compile(program)
+		if err != nil {
+			fmt.Fprintf(out, "Woops!Compilation fail:\n%s\n", err)
+			continue
 		}
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Fprintf(out, "%+v\n", tok)
+		machine := vm.New(comp.Bytecode())
+		err = machine.Run()
+		if err != nil {
+			fmt.Fprintf(out, "Woops!Executing bytecode failed:\n%s\n", err)
+			continue
 		}
+
+		stackTop := machine.LastPoppedStackElem()
+		io.WriteString(out, stackTop.Inspect())
+		io.WriteString(out, "\n")
+		//evaluated := evaluator.Eval(program, env)
+		//if evaluated != nil {
+		//	io.WriteString(out, evaluated.Inspect())
+		//	io.WriteString(out, "\n")
+		//}
+		//for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
+		//	fmt.Fprintf(out, "%+v\n", tok)
+		//}
 
 	}
 }

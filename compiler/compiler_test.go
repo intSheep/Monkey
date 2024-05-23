@@ -18,36 +18,43 @@ type compilerTestCase struct {
 
 func TestIntegerArithmetic(t *testing.T) {
 	tests := []compilerTestCase{
-		{input: `1+2`, expectedConstants: []any{1, 2}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpConstant, 1), code.Make(code.OpAdd)}},
+		{input: `1+2`, expectedConstants: []any{1, 2}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpConstant, 1), code.Make(code.OpAdd), code.Make(code.OpPop)}},
+		{input: `1;2`, expectedConstants: []any{1, 2}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpPop), code.Make(code.OpConstant, 1), code.Make(code.OpPop)}},
+		{input: `2-1`, expectedConstants: []any{2, 1}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpConstant, 1), code.Make(code.OpSub), code.Make(code.OpPop)}},
+		{input: `4/2`, expectedConstants: []any{4, 2}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpConstant, 1), code.Make(code.OpDiv), code.Make(code.OpPop)}},
+		{input: `3*7`, expectedConstants: []any{3, 7}, expectedInstructions: []code.Instructions{code.Make(code.OpConstant, 0), code.Make(code.OpConstant, 1), code.Make(code.OpMul), code.Make(code.OpPop)}},
 	}
-
-	runCompilerTests(t, tests)
-}
-
-func runCompilerTests(t *testing.T, tests []compilerTestCase) {
-	t.Helper()
 
 	for _, tt := range tests {
-		program := parse(tt.input)
-
-		compiler := New()
-		err := compiler.Compile(program)
-		if err != nil {
-			t.Fatalf("compiler error:%s", err)
-		}
-
-		bytecode := compiler.Bytecode()
-
-		err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
-		if err != nil {
-			t.Fatalf("testInstructions fail: %v", err)
-		}
-
-		err = testConstants(tt.expectedConstants, bytecode.Constants)
-		if err != nil {
-			t.Fatalf("testConstants fail: %v", err)
-		}
+		t.Run(tt.input, func(t *testing.T) {
+			runCompilerTest(t, tt)
+		})
 	}
+}
+
+func runCompilerTest(t *testing.T, tt compilerTestCase) {
+	t.Helper()
+
+	program := parse(tt.input)
+
+	compiler := New()
+	err := compiler.Compile(program)
+	if err != nil {
+		t.Fatalf("compiler error:%s", err)
+	}
+
+	bytecode := compiler.Bytecode()
+
+	err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
+	if err != nil {
+		t.Fatalf("testInstructions fail: %v", err)
+	}
+
+	err = testConstants(tt.expectedConstants, bytecode.Constants)
+	if err != nil {
+		t.Fatalf("testConstants fail: %v", err)
+	}
+
 }
 
 func testInstructions(expected []code.Instructions, actual code.Instructions) error {
