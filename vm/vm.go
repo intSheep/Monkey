@@ -8,13 +8,15 @@ import (
 )
 
 const StackSize = 2048
+const GlobalsSize = 65536
 
 type VM struct {
 	constants    []object.Object
 	instructions code.Instructions
 
-	stack []object.Object
-	sp    int // 指向栈顶下一个位置的指针
+	stack   []object.Object
+	sp      int // 指向栈顶下一个位置的指针
+	globals []object.Object
 }
 
 var True = &object.Boolean{Value: true}
@@ -27,7 +29,15 @@ func New(bytecode *compiler.Bytecode) *VM {
 		constants:    bytecode.Constants,
 		stack:        make([]object.Object, StackSize),
 		sp:           0,
+		globals:      make([]object.Object, GlobalsSize),
 	}
+}
+
+func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
+	vm := New(bytecode)
+	vm.globals = s
+	return vm
+
 }
 
 func (vm *VM) Run() error {
@@ -36,7 +46,7 @@ func (vm *VM) Run() error {
 		// 直接取op并转化为操作码，而不是使用lookup，因为这会很慢
 		switch op {
 		case code.OpConstant:
-			constIndex := code.ReadUnit16(vm.instructions[ip+1:])
+			constIndex := code.ReadUnit16(vm.instructions[ip+1:]) //ReadUnit16期望读取两个字节，因此不用特地使用[ip+1:ip+3]
 			ip += 2
 			err := vm.push(vm.constants[constIndex])
 			if err != nil {
@@ -79,6 +89,17 @@ func (vm *VM) Run() error {
 			}
 		case code.OpNull:
 			err := vm.push(Null)
+			if err != nil {
+				return err
+			}
+		case code.OpSetGlobal:
+			globalIndex := code.ReadUnit16(vm.instructions[ip+1:])
+			ip += 2
+			vm.globals[globalIndex] = vm.pop()
+		case code.OpGetGlobal:
+			globalIndex := code.ReadUnit16(vm.instructions[ip+1:])
+			ip += 2
+			err := vm.push(vm.globals[globalIndex])
 			if err != nil {
 				return err
 			}

@@ -12,6 +12,7 @@ type Compiler struct {
 	constants           []object.Object    // 常量池
 	lastInstruction     EmittedInstruction // 最后一条发出的指令
 	previousInstruction EmittedInstruction // 倒数第二条发出的指令
+	symbolTable         *SymbolTable       // 符号表
 }
 
 type EmittedInstruction struct {
@@ -23,7 +24,15 @@ func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+		symbolTable:  NewSymbolTable(),
 	}
+}
+
+func NewWithState(s *SymbolTable, constants []object.Object) *Compiler {
+	compiler := New()
+	compiler.symbolTable = s
+	compiler.constants = constants
+	return compiler
 }
 
 func (c *Compiler) Compile(node ast.Node) error {
@@ -139,7 +148,20 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 		afterAlternativePos := len(c.instructions)
 		c.changeOperand(jumpPos, afterAlternativePos)
-
+	case *ast.LetStatement:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+		symbol := c.symbolTable.Define(node.Name.Value)
+		c.emit(code.OpSetGlobal, symbol.Index)
+	case *ast.Identifier:
+		name := node.Value
+		symbol, ok := c.symbolTable.Resolve(name)
+		if !ok {
+			return fmt.Errorf("undefined variable: %s", name)
+		}
+		c.emit(code.OpGetGlobal, symbol.Index)
 	}
 
 	return nil
