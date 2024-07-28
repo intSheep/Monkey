@@ -246,4 +246,4 @@ func isTruthy(obj object.Object) bool {
 		return true
 	}
 }
-//a
+//a //b 
